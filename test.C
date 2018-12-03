@@ -22,5 +22,7 @@ ntuple->Fill(x,y,z);
 
 f->Write();
 f->Close();
+
+ std::cout<< std::endl << "test done" << std::endl;
 }
 
