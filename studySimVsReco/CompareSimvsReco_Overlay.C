@@ -1,0 +1,491 @@
+#include "TString.h"
+#include "TCanvas.h"
+#include "TH1.h"
+#include "TFile.h"
+#include "TPaveText.h"
+#include "TLegend.h"
+#include "TMarker.h"
+#include "TColor.h"
+#include "TStyle.h"
+#include "TProfile.h"
+#include "TROOT.h"
+
+#include <iostream>
+
+using namespace std;
+
+void CompareSimvsReco_Overlay(TString Reco, TString Sim, const char* Filename="SimvsReco.root", const char* OutputPath="/home/gu74yub/SimAna/Results/compareSimvsReco/tracks")
+{
+
+  gROOT->ProcessLine(".x /home/gu74yub/rootlogon.C");
+  gStyle->SetOptStat(0);
+
+  TFile *RecoFile = TFile::Open(Reco.Data());
+  TFile *SimFile  = TFile::Open(Sim.Data());
+  if (!RecoFile) {
+    cout << "Reco File Not Open" << endl;
+    return;
+  }
+
+  if (!SimFile) {
+    cout << "Sim File Not Open" << endl;
+    return;
+  }
+
+  TH1F *hQmaxUsedReco             = (TH1F*)(RecoFile->FindObjectAny("hQmaxUsedReco"));
+  TH1F *hQmaxUsedSim              = (TH1F*)(SimFile->FindObjectAny("hQmaxUsedSim"));
+  TH1F *hQUsedReco                = (TH1F*)(RecoFile->FindObjectAny("hQtotUsedReco"));
+  TH1F *hQUsedSim                 = (TH1F*)(SimFile->FindObjectAny("hQtotUsedSim"));
+  TH1F *hTrackResidualsReco       = (TH1F*)(RecoFile->FindObjectAny("hTrackResidualsReco"));
+  TH1F *hTrackResidualsSim        = (TH1F*)(SimFile->FindObjectAny("hTrackResidualsSim"));
+  TH1F *hdEdxTotAllReco           = (TH1F*)(RecoFile->FindObjectAny("hdEdxTotAllReco"));
+  TH1F *hdEdxTotAllSim            = (TH1F*)(SimFile->FindObjectAny("hdEdxTotAllSim"));
+  TH1F *hdEdxEleTotAllReco        = (TH1F*)(RecoFile->FindObjectAny("hdEdxEleTotAllReco"));
+  TH1F *hdEdxEleTotAllSim         = (TH1F*)(SimFile->FindObjectAny("hdEdxEleTotAllSim"));
+  TH1F *hdEdxMaxReco              = (TH1F*)(RecoFile->FindObjectAny("hdEdxMaxReco"));
+  TH1F *hdEdxMaxSim               = (TH1F*)(SimFile->FindObjectAny("hdEdxMaxSim"));
+  TH1F *hdEdxEleMaxReco           = (TH1F*)(RecoFile->FindObjectAny("hdEdxEleMaxReco"));
+  TH1F *hdEdxEleMaxSim            = (TH1F*)(SimFile->FindObjectAny("hdEdxEleMaxSim"));
+  TProfile *pNeighborPadsReco     = (TProfile*)(RecoFile->FindObjectAny("pQNeighboringRowReco"));
+  TProfile *pNeighborPadsSim      = (TProfile*)(SimFile->FindObjectAny("pQNeighboringRowSim"));
+  TH1F *hCRUReco                  = (TH1F*)(RecoFile->FindObjectAny("hCRUReco"));
+  TH1F *hCRUSim                   = (TH1F*)(SimFile->FindObjectAny("hCRUSim"));
+  TH1F *hRowReco                  = (TH1F*)(RecoFile->FindObjectAny("hRowReco"));
+  TH1F *hRowSim                   = (TH1F*)(SimFile->FindObjectAny("hRowSim"));
+  TH1F *hPadMeanReco              = (TH1F*)(RecoFile->FindObjectAny("hPadMeanReco"));
+  TH1F *hPadMeanSim               = (TH1F*)(SimFile->FindObjectAny("hPadMeanSim"));
+  TH1F *hPadSigmaReco             = (TH1F*)(RecoFile->FindObjectAny("hPadSigmaReco"));
+  TH1F *hPadSigmaSim              = (TH1F*)(SimFile->FindObjectAny("hPadSigmaSim"));
+  TH1F *hTimeMeanReco             = (TH1F*)(RecoFile->FindObjectAny("hTimeMeanReco"));
+  TH1F *hTimeMeanSim              = (TH1F*)(SimFile->FindObjectAny("hTimeMeanSim"));
+  TH1F *hTimeSigmaReco            = (TH1F*)(RecoFile->FindObjectAny("hTimeSigmaReco"));
+  TH1F *hTimeSigmaSim             = (TH1F*)(SimFile->FindObjectAny("hTimeSigmaSim"));
+  TProfile *pQmaxNeighborPadsReco = (TProfile*)(RecoFile->FindObjectAny("pQmaxNeighboringRowReco"));
+  TProfile *pQmaxNeighborPadsSim  = (TProfile*)(SimFile->FindObjectAny("pQmaxNeighboringRowSim"));
+  TH1F *hTrackResidualsTimeReco   = (TH1F*)(RecoFile->FindObjectAny("hTrackResidualsTimeReco"));
+  TH1F *hTrackResidualsTimeSim    = (TH1F*)(SimFile->FindObjectAny("hTrackResidualsTimeSim"));
+
+
+  short simColor  = kPink;
+  short recoColor = kBlue-2;
+/*  TMarker *sim  = new TMarker();
+  TMarker *reco = new TMarker();
+  sim->SetMarkerColor(simColor);
+  reco->SetMarkerColor(recoColor);
+*/
+
+  TCanvas *cQmaxDist = new TCanvas();
+  float maxQmaxSim  = hQmaxUsedSim->GetBinContent(hQmaxUsedSim->GetMaximumBin());
+  float maxQmaxReco = hQmaxUsedReco->GetBinContent(hQmaxUsedReco->GetMaximumBin());
+  float maxQmax     = max(maxQmaxSim,maxQmaxReco);
+  hQmaxUsedSim->GetYaxis()->SetRangeUser(0,1.2*maxQmax);
+  hQmaxUsedSim->GetXaxis()->SetRangeUser(0,600);
+  hQmaxUsedSim->SetLineColor(simColor);
+  hQmaxUsedSim->SetMarkerStyle(20);
+  hQmaxUsedSim->SetMarkerColor(simColor);
+  hQmaxUsedSim->GetYaxis()->SetTitle("normalized counts");
+  hQmaxUsedSim->Draw();
+  hQmaxUsedReco->SetLineColor(recoColor);
+  hQmaxUsedReco->SetMarkerStyle(20);
+  hQmaxUsedReco->SetMarkerColor(recoColor);
+  hQmaxUsedReco->Draw("same");
+  TLegend *leg1 = new TLegend(0.75,0.75,0.9,0.9);
+  leg1->AddEntry(hQmaxUsedSim,"Simulation","p");
+  leg1->AddEntry(hQmaxUsedReco,"Data","p");
+  leg1->SetTextSize(0.05);
+  leg1->SetBorderSize(0);
+  leg1->Draw("same");
+/*  TPaveText *pave1=new TPaveText(0.6,.7,.9,.9,"NDC");
+  pave1->SetBorderSize(1);
+  pave1->SetFillColor(10);
+  pave1->AddText(Form("e: %.2f #pm %.2f (%.2f%%)",electronmeanMax,electronsigmaMax, electronsigmaMax/electronmeanMax*100));
+  pave1->AddText(Form("#pi: %.2f #pm %.2f (%.2f%%)",pionmeanMax,pionsigmaMax,pionsigmaMax/pionmeanMax*100));
+  pave1->AddText(Form("Separation: %.2f#sigma", TMath::Abs(electronmeanMax-pionmeanMax)/((electronsigmaMax+pionsigmaMax)/2.)));
+  pave1->Draw("same");
+*/
+  TCanvas *cQtotDist = new TCanvas();
+  float maxQSim  = hQUsedSim->GetBinContent(hQUsedSim->GetMaximumBin());
+  float maxQReco = hQUsedReco->GetBinContent(hQUsedReco->GetMaximumBin());
+  float maxQ     = max(maxQSim,maxQReco);
+  hQUsedSim->GetYaxis()->SetRangeUser(0,1.2*maxQ);
+  hQUsedSim->GetXaxis()->SetRangeUser(0,600);
+  hQUsedSim->SetLineColor(simColor);
+  hQUsedSim->SetMarkerStyle(20);
+  hQUsedSim->SetMarkerColor(simColor);
+  hQUsedSim->GetYaxis()->SetTitle("normalized counts");
+  hQUsedSim->GetYaxis()->SetTitleSize(30);
+  hQUsedSim->GetYaxis()->SetLabelSize(27);
+  hQUsedSim->GetYaxis()->SetTitleFont(43);
+  hQUsedSim->GetYaxis()->SetLabelFont(43);
+  hQUsedSim->GetXaxis()->SetTitleSize(30);
+  hQUsedSim->GetXaxis()->SetLabelSize(27);
+  hQUsedSim->GetXaxis()->SetTitleFont(43);
+  hQUsedSim->GetXaxis()->SetLabelFont(43);
+  hQUsedSim->GetYaxis()->SetTitleOffset(1.1);
+  hQUsedSim->Draw();
+  hQUsedReco->SetLineColor(recoColor);
+  hQUsedReco->SetMarkerStyle(20);
+  hQUsedReco->SetMarkerColor(recoColor);
+  hQUsedReco->Draw("same");
+  TLegend *leg2 = new TLegend(0.75,0.75,0.9,0.9);
+  leg2->AddEntry(hQUsedSim,"Simulation","p");
+  leg2->AddEntry(hQUsedReco,"Data","p");
+  leg2->SetTextSize(0.05);
+  leg2->SetBorderSize(0);
+  leg2->Draw("same");
+
+  TCanvas *cTrackResiduals = new TCanvas();
+  float maxTrackResidualsSim  = hTrackResidualsSim->GetBinContent(hTrackResidualsSim->GetMaximumBin());
+  float maxTrackResidualsReco = hTrackResidualsReco->GetBinContent(hTrackResidualsReco->GetMaximumBin());
+  float maxTrackResiduals     = max(maxTrackResidualsSim,maxTrackResidualsReco);
+  hTrackResidualsSim->GetYaxis()->SetRangeUser(0,1.2*maxTrackResiduals);
+  hTrackResidualsSim->SetLineColor(simColor);
+  hTrackResidualsSim->SetMarkerStyle(20);
+  hTrackResidualsSim->SetMarkerColor(simColor);
+  hTrackResidualsSim->Draw();
+  hTrackResidualsReco->SetLineColor(recoColor);
+  hTrackResidualsReco->SetMarkerStyle(20);
+  hTrackResidualsReco->SetMarkerColor(recoColor);
+  hTrackResidualsReco->Draw("same");
+  TLegend *leg3 = new TLegend(0.75,0.75,0.9,0.9);
+  leg3->AddEntry(hTrackResidualsSim,"Simulation","p");
+  leg3->AddEntry(hTrackResidualsReco,"Data","p");
+  leg3->SetTextSize(0.05);
+  leg3->SetBorderSize(0);
+  leg3->Draw("same");
+
+  TCanvas *cdEdxQtotPi = new TCanvas();
+  float maxdEdxTotAllSim  = hdEdxTotAllSim->GetBinContent(hdEdxTotAllSim->GetMaximumBin());
+  float maxdEdxTotAllReco = hdEdxTotAllReco->GetBinContent(hdEdxTotAllReco->GetMaximumBin());
+  float maxdEdxTotAll     = max(maxdEdxTotAllSim,maxdEdxTotAllReco);
+  hdEdxTotAllSim->GetYaxis()->SetRangeUser(0,1.2*maxdEdxTotAll);
+  hdEdxTotAllSim->SetLineColor(simColor);
+  hdEdxTotAllSim->GetXaxis()->SetRangeUser(0,220);
+  hdEdxTotAllSim->SetMarkerStyle(20);
+  hdEdxTotAllSim->SetMarkerColor(simColor);
+  hdEdxTotAllSim->GetYaxis()->SetTitle("normalized counts");
+  hdEdxTotAllSim->GetXaxis()->SetTitle("d#it{E}/d#it{x} [ADC counts]");
+  hdEdxTotAllSim->GetYaxis()->SetTitleSize(30);
+  hdEdxTotAllSim->GetYaxis()->SetLabelSize(27);
+  hdEdxTotAllSim->GetYaxis()->SetTitleFont(43);
+  hdEdxTotAllSim->GetYaxis()->SetLabelFont(43);
+  hdEdxTotAllSim->GetXaxis()->SetTitleSize(30);
+  hdEdxTotAllSim->GetXaxis()->SetLabelSize(27);
+  hdEdxTotAllSim->GetXaxis()->SetTitleFont(43);
+  hdEdxTotAllSim->GetXaxis()->SetLabelFont(43);
+  hdEdxTotAllSim->GetYaxis()->SetTitleOffset(1.1);
+  hdEdxTotAllSim->Draw();
+  hdEdxTotAllReco->SetLineColor(recoColor);
+  hdEdxTotAllReco->SetMarkerStyle(20);
+  hdEdxTotAllReco->SetMarkerColor(recoColor);
+  hdEdxTotAllReco->Draw("same");
+  TLegend *leg4 = new TLegend(0.75,0.75,0.9,0.9);
+  leg4->AddEntry(hdEdxTotAllSim,"Simulation","p");
+  leg4->AddEntry(hdEdxTotAllReco,"Data","p");
+  leg4->SetTextSize(0.05);
+  leg4->SetBorderSize(0);
+  leg4->Draw("same");
+
+  TCanvas *cdEdxQtotEle = new TCanvas();
+  float maxdEdxEleTotAllSim  = hdEdxEleTotAllSim->GetBinContent(hdEdxEleTotAllSim->GetMaximumBin());
+  float maxdEdxEleTotAllReco = hdEdxEleTotAllReco->GetBinContent(hdEdxEleTotAllReco->GetMaximumBin());
+  float maxdEdxEleTotAll     = max(maxdEdxEleTotAllSim,maxdEdxEleTotAllReco);
+  hdEdxEleTotAllSim->GetYaxis()->SetRangeUser(0,1.2*maxdEdxEleTotAll);
+  hdEdxEleTotAllSim->GetXaxis()->SetRangeUser(0,200);
+  hdEdxEleTotAllSim->SetLineColor(simColor);
+  hdEdxEleTotAllSim->SetMarkerStyle(20);
+  hdEdxEleTotAllSim->SetMarkerColor(simColor);
+  hdEdxEleTotAllSim->Draw();
+  hdEdxEleTotAllReco->SetLineColor(recoColor);
+  hdEdxEleTotAllReco->SetMarkerStyle(20);
+  hdEdxEleTotAllReco->SetMarkerColor(recoColor);
+  hdEdxEleTotAllReco->Draw("same");
+  TLegend *leg5 = new TLegend(0.75,0.75,0.9,0.9);
+  leg5->AddEntry(hdEdxEleTotAllSim,"Simulation","p");
+  leg5->AddEntry(hdEdxEleTotAllReco,"Data","p");
+  leg5->SetTextSize(0.05);
+  leg5->SetBorderSize(0);
+  leg5->Draw("same");
+
+  TCanvas *cdEdxQmaxPi = new TCanvas();
+  float maxdEdxMaxSim  = hdEdxMaxSim->GetBinContent(hdEdxMaxSim->GetMaximumBin());
+  float maxdEdxMaxReco = hdEdxMaxReco->GetBinContent(hdEdxMaxReco->GetMaximumBin());
+  float maxdEdxMax     = max(maxdEdxMaxSim,maxdEdxMaxReco);
+  hdEdxMaxSim->GetYaxis()->SetRangeUser(0,1.2*maxdEdxMax);
+  hdEdxMaxSim->SetLineColor(simColor);
+  hdEdxMaxSim->GetXaxis()->SetRangeUser(0,220);
+  hdEdxMaxSim->SetMarkerStyle(20);
+  hdEdxMaxSim->SetMarkerColor(simColor);
+  hdEdxMaxSim->GetYaxis()->SetTitle("normalized counts");
+  hdEdxMaxSim->GetXaxis()->SetTitle("d#it{E}/d#it{x} [ADC counts]");
+  hdEdxMaxSim->GetYaxis()->SetTitleSize(30);
+  hdEdxMaxSim->GetYaxis()->SetLabelSize(27);
+  hdEdxMaxSim->GetYaxis()->SetTitleFont(43);
+  hdEdxMaxSim->GetYaxis()->SetLabelFont(43);
+  hdEdxMaxSim->GetXaxis()->SetTitleSize(30);
+  hdEdxMaxSim->GetXaxis()->SetLabelSize(27);
+  hdEdxMaxSim->GetXaxis()->SetTitleFont(43);
+  hdEdxMaxSim->GetXaxis()->SetLabelFont(43);
+  hdEdxMaxSim->GetYaxis()->SetTitleOffset(1.1);
+  hdEdxMaxSim->Draw();
+  hdEdxMaxReco->SetLineColor(recoColor);
+  hdEdxMaxReco->SetMarkerStyle(20);
+  hdEdxMaxReco->SetMarkerColor(recoColor);
+  hdEdxMaxReco->Draw("same");
+  TLegend *leg14 = new TLegend(0.75,0.75,0.9,0.9);
+  leg14->AddEntry(hdEdxMaxSim,"Simulation","p");
+  leg14->AddEntry(hdEdxMaxReco,"Data","p");
+  leg14->SetTextSize(0.05);
+  leg14->SetBorderSize(0);
+  leg14->Draw("same");
+
+  TCanvas *cdEdxQmaxEle = new TCanvas();
+  float maxdEdxEleMaxSim  = hdEdxEleMaxSim->GetBinContent(hdEdxEleMaxSim->GetMaximumBin());
+  float maxdEdxEleMaxReco = hdEdxEleMaxReco->GetBinContent(hdEdxEleMaxReco->GetMaximumBin());
+  float maxdEdxEleMax     = max(maxdEdxEleMaxSim,maxdEdxEleMaxReco);
+  hdEdxEleMaxSim->GetYaxis()->SetRangeUser(0,1.2*maxdEdxEleMax);
+  hdEdxEleMaxSim->SetLineColor(simColor);
+  hdEdxEleMaxSim->GetXaxis()->SetRangeUser(0,220);
+  hdEdxEleMaxSim->SetMarkerStyle(20);
+  hdEdxEleMaxSim->SetMarkerColor(simColor);
+  hdEdxEleMaxSim->GetYaxis()->SetTitle("normalized counts");
+  hdEdxEleMaxSim->GetXaxis()->SetTitle("d#it{E}/d#it{x} [ADC counts]");
+  hdEdxEleMaxSim->GetYaxis()->SetTitleSize(30);
+  hdEdxEleMaxSim->GetYaxis()->SetLabelSize(27);
+  hdEdxEleMaxSim->GetYaxis()->SetTitleFont(43);
+  hdEdxEleMaxSim->GetYaxis()->SetLabelFont(43);
+  hdEdxEleMaxSim->GetXaxis()->SetTitleSize(30);
+  hdEdxEleMaxSim->GetXaxis()->SetLabelSize(27);
+  hdEdxEleMaxSim->GetXaxis()->SetTitleFont(43);
+  hdEdxEleMaxSim->GetXaxis()->SetLabelFont(43);
+  hdEdxEleMaxSim->GetYaxis()->SetTitleOffset(1.1);
+  hdEdxEleMaxSim->Draw();
+  hdEdxEleMaxReco->SetLineColor(recoColor);
+  hdEdxEleMaxReco->SetMarkerStyle(20);
+  hdEdxEleMaxReco->SetMarkerColor(recoColor);
+  hdEdxEleMaxReco->Draw("same");
+  TLegend *leg15 = new TLegend(0.75,0.75,0.9,0.9);
+  leg15->AddEntry(hdEdxEleMaxSim,"Simulation","p");
+  leg15->AddEntry(hdEdxEleMaxReco,"Data","p");
+  leg15->SetTextSize(0.05);
+  leg15->SetBorderSize(0);
+  leg15->Draw("same");
+
+  TCanvas *cNeighborPads = new TCanvas();
+  float maxNeighborPadsSim  = pNeighborPadsSim->GetBinContent(pNeighborPadsSim->GetMaximumBin());
+  float maxNeighborPadsReco = pNeighborPadsReco->GetBinContent(pNeighborPadsReco->GetMaximumBin());
+  float maxNeighborPads     = max(maxNeighborPadsSim,maxNeighborPadsReco);
+  pNeighborPadsSim->GetYaxis()->SetRangeUser(0,1.2*maxNeighborPads);
+  pNeighborPadsSim->SetLineColor(simColor);
+  pNeighborPadsSim->SetMarkerStyle(20);
+  pNeighborPadsSim->SetMarkerColor(simColor);
+  pNeighborPadsSim->Draw();
+  pNeighborPadsReco->SetLineColor(recoColor);
+  pNeighborPadsReco->SetMarkerStyle(20);
+  pNeighborPadsReco->SetMarkerColor(recoColor);
+  pNeighborPadsReco->Draw("same");
+  TLegend *leg6 = new TLegend(0.75,0.75,0.9,0.9);
+  leg6->AddEntry(pNeighborPadsSim,"Simulation","p");
+  leg6->AddEntry(pNeighborPadsReco,"Data","p");
+  leg6->SetTextSize(0.05);
+  leg6->SetBorderSize(0);
+  leg6->Draw("same");
+
+  TCanvas *cQmaxNeighborPads = new TCanvas();
+  float maxQmaxNeighborPadsSim  = pQmaxNeighborPadsSim->GetBinContent(pQmaxNeighborPadsSim->GetMaximumBin());
+  float maxQmaxNeighborPadsReco = pQmaxNeighborPadsReco->GetBinContent(pQmaxNeighborPadsReco->GetMaximumBin());
+  float maxQmaxNeighborPads     = max(maxQmaxNeighborPadsSim,maxQmaxNeighborPadsReco);
+  pQmaxNeighborPadsSim->GetYaxis()->SetRangeUser(0,1.2*maxQmaxNeighborPads);
+  pQmaxNeighborPadsSim->SetLineColor(simColor);
+  pQmaxNeighborPadsSim->SetMarkerStyle(20);
+  pQmaxNeighborPadsSim->SetMarkerColor(simColor);
+  pQmaxNeighborPadsSim->Draw();
+  pQmaxNeighborPadsReco->SetLineColor(recoColor);
+  pQmaxNeighborPadsReco->SetMarkerStyle(20);
+  pQmaxNeighborPadsReco->SetMarkerColor(recoColor);
+  pQmaxNeighborPadsReco->Draw("same");
+  TLegend *leg7 = new TLegend(0.75,0.75,0.9,0.9);
+  leg7->AddEntry(pQmaxNeighborPadsSim,"Simulation","p");
+  leg7->AddEntry(pQmaxNeighborPadsReco,"Data","p");
+  leg7->SetTextSize(0.05);
+  leg7->SetBorderSize(0);
+  leg7->Draw("same");
+
+  TCanvas *cCRU = new TCanvas();
+  float maxCRUSim  = hCRUSim->GetBinContent(hCRUSim->GetMaximumBin());
+  float maxCRUReco = hCRUReco->GetBinContent(hCRUReco->GetMaximumBin());
+  float maxCRU     = max(maxCRUSim,maxCRUReco);
+  hCRUSim->GetYaxis()->SetRangeUser(0,1.2*maxCRU);
+  hCRUSim->SetLineColor(simColor);
+  hCRUSim->SetMarkerStyle(20);
+  hCRUSim->SetMarkerColor(simColor);
+  hCRUSim->Draw();
+  hCRUReco->SetLineColor(recoColor);
+  hCRUReco->SetMarkerStyle(20);
+  hCRUReco->SetMarkerColor(recoColor);
+  hCRUReco->Draw("same");
+  TLegend *leg8 = new TLegend(0.75,0.75,0.9,0.9);
+  leg8->AddEntry(hCRUSim,"Simulation","p");
+  leg8->AddEntry(hCRUReco,"Data","p");
+  leg8->SetTextSize(0.05);
+  leg8->SetBorderSize(0);
+  leg8->Draw("same");
+
+  TCanvas *cRow = new TCanvas();
+  float maxRowSim  = hRowSim->GetBinContent(hRowSim->GetMaximumBin());
+  float maxRowReco = hRowReco->GetBinContent(hRowReco->GetMaximumBin());
+  float maxRow     = max(maxRowSim,maxRowReco);
+  hRowSim->GetYaxis()->SetRangeUser(0,1.2*maxRow);
+  hRowSim->SetLineColor(simColor);
+  hRowSim->SetMarkerStyle(20);
+  hRowSim->SetMarkerColor(simColor);
+  hRowSim->Draw();
+  hRowReco->SetLineColor(recoColor);
+  hRowReco->SetMarkerStyle(20);
+  hRowReco->SetMarkerColor(recoColor);
+  hRowReco->Draw("same");
+  TLegend *leg9 = new TLegend(0.75,0.75,0.9,0.9);
+  leg9->AddEntry(hRowSim,"Simulation","p");
+  leg9->AddEntry(hRowReco,"Data","p");
+  leg9->SetTextSize(0.05);
+  leg9->SetBorderSize(0);
+  leg9->Draw("same");
+
+  TCanvas *cPadMean = new TCanvas();
+  float maxPadMeanSim  = hPadMeanSim->GetBinContent(hPadMeanSim->GetMaximumBin());
+  float maxPadMeanReco = hPadMeanReco->GetBinContent(hPadMeanReco->GetMaximumBin());
+  float maxPadMean     = max(maxPadMeanSim,maxPadMeanReco);
+  hPadMeanSim->GetYaxis()->SetRangeUser(0,1.2*maxPadMean);
+  hPadMeanSim->SetLineColor(simColor);
+  hPadMeanSim->SetMarkerStyle(20);
+  hPadMeanSim->SetMarkerColor(simColor);
+  hPadMeanSim->Draw();
+  hPadMeanReco->SetLineColor(recoColor);
+  hPadMeanReco->SetMarkerStyle(20);
+  hPadMeanReco->SetMarkerColor(recoColor);
+  hPadMeanReco->Draw("same");
+  TLegend *leg10 = new TLegend(0.75,0.75,0.9,0.9);
+  leg10->AddEntry(hPadMeanSim,"Simulation","p");
+  leg10->AddEntry(hPadMeanReco,"Data","p");
+  leg10->SetTextSize(0.05);
+  leg10->SetBorderSize(0);
+  leg10->Draw("same");
+
+  TCanvas *cPadSigma = new TCanvas();
+  float maxPadSigmaSim  = hPadSigmaSim->GetBinContent(hPadSigmaSim->GetMaximumBin());
+  float maxPadSigmaReco = hPadSigmaReco->GetBinContent(hPadSigmaReco->GetMaximumBin());
+  float maxPadSigma     = max(maxPadSigmaSim,maxPadSigmaReco);
+  hPadSigmaSim->GetYaxis()->SetRangeUser(0,1.2*maxPadSigma);
+  hPadSigmaSim->SetLineColor(simColor);
+  hPadSigmaSim->SetMarkerStyle(20);
+  hPadSigmaSim->SetMarkerColor(simColor);
+  hPadSigmaSim->Draw();
+  hPadSigmaReco->SetLineColor(recoColor);
+  hPadSigmaReco->SetMarkerStyle(20);
+  hPadSigmaReco->SetMarkerColor(recoColor);
+  hPadSigmaReco->Draw("same");
+  TLegend *leg11 = new TLegend(0.75,0.75,0.9,0.9);
+  leg11->AddEntry(hPadSigmaSim,"Simulation","p");
+  leg11->AddEntry(hPadSigmaReco,"Data","p");
+  leg11->SetTextSize(0.05);
+  leg11->SetBorderSize(0);
+  leg11->Draw("same");
+
+  TCanvas *cTimeMean = new TCanvas();
+  float maxTimeMeanSim  = hTimeMeanSim->GetBinContent(hTimeMeanSim->GetMaximumBin());
+  float maxTimeMeanReco = hTimeMeanReco->GetBinContent(hTimeMeanReco->GetMaximumBin());
+  float maxTimeMean     = max(maxTimeMeanSim,maxTimeMeanReco);
+  hTimeMeanSim->GetYaxis()->SetRangeUser(0,1.2*maxTimeMean);
+  hTimeMeanSim->SetLineColor(simColor);
+  hTimeMeanSim->SetMarkerStyle(20);
+  hTimeMeanSim->SetMarkerColor(simColor);
+  hTimeMeanSim->Draw();
+  hTimeMeanReco->SetLineColor(recoColor);
+  hTimeMeanReco->SetMarkerStyle(20);
+  hTimeMeanReco->SetMarkerColor(recoColor);
+  hTimeMeanReco->Draw("same");
+  TLegend *leg12 = new TLegend(0.75,0.75,0.9,0.9);
+  leg12->AddEntry(hTimeMeanSim,"Simulation","p");
+  leg12->AddEntry(hTimeMeanReco,"Data","p");
+  leg12->SetTextSize(0.05);
+  leg12->SetBorderSize(0);
+  leg12->Draw("same");
+
+  TCanvas *cTimeSigma = new TCanvas();
+  float maxTimeSigmaSim  = hTimeSigmaSim->GetBinContent(hTimeSigmaSim->GetMaximumBin());
+  float maxTimeSigmaReco = hTimeSigmaReco->GetBinContent(hTimeSigmaReco->GetMaximumBin());
+  float maxTimeSigma     = max(maxTimeSigmaSim,maxTimeSigmaReco);
+  hTimeSigmaSim->GetYaxis()->SetRangeUser(0,1.2*maxTimeSigma);
+  hTimeSigmaSim->SetLineColor(simColor);
+  hTimeSigmaSim->SetMarkerStyle(20);
+  hTimeSigmaSim->SetMarkerColor(simColor);
+  hTimeSigmaSim->Draw();
+  hTimeSigmaReco->SetLineColor(recoColor);
+  hTimeSigmaReco->SetMarkerStyle(20);
+  hTimeSigmaReco->SetMarkerColor(recoColor);
+  hTimeSigmaReco->Draw("same");
+  TLegend *leg13 = new TLegend(0.75,0.75,0.9,0.9);
+  leg13->AddEntry(hTimeSigmaSim,"Simulation","p");
+  leg13->AddEntry(hTimeSigmaReco,"Data","p");
+  leg13->SetTextSize(0.05);
+  leg13->SetBorderSize(0);
+  leg13->Draw("same");
+
+  TFile *Outfile = new TFile(Form("%s/%s", OutputPath,Filename), "recreate");
+
+  Outfile->WriteObject(cQmaxDist, "QmaxDist");
+  Outfile->WriteObject(cQtotDist, "QtotDist");
+  Outfile->WriteObject(cTrackResiduals, "TrackResiduals");
+  Outfile->WriteObject(cdEdxQtotPi, "dEdxQtotPi");
+  Outfile->WriteObject(cdEdxQtotEle, "dEdxQtotEle");
+  Outfile->WriteObject(cdEdxQmaxPi, "dEdxQmaxPi");
+  Outfile->WriteObject(cdEdxQmaxEle, "dEdxQmaxEle");
+  Outfile->WriteObject(cNeighborPads, "QNeighboringPads");
+  Outfile->WriteObject(cQmaxNeighborPads, "QmaxNeighboringPads");
+  Outfile->WriteObject(cCRU, "CRU");
+  Outfile->WriteObject(cRow, "Row");
+  Outfile->WriteObject(cPadMean, "PadMean");
+  Outfile->WriteObject(cPadSigma, "PadSigma");
+  Outfile->WriteObject(cTimeMean, "TimeMean");
+  Outfile->WriteObject(cTimeSigma, "TimeSigma");
+//  Outfile->WriteObjectAny(hQUsedSim, TH1F, "hQtotSim"); ///falsch !!
+//  Outfile->WriteObjectAny(hQUsedReco,TH1F, "hQtotReco");
+//  Outfile->WriteObjectAny(hdEdxTotAllSim, TH1F, "hdEdxPiSim");
+//  Outfile->WriteObjectAny(hdEdxTotAllReco, TH1F, "hdEdxEleReco");
+/*  Outfile->WriteObject(hQmaxUsedReco, "hQmaxUsedReco");
+  Outfile->WriteObject(hQmaxUsedSim, "hQmaxUsedReco");
+  Outfile->WriteObject(hQUsedReco, "hQUsedReco");
+  Outfile->WriteObject(hQUsedSim, "hQUsedSim");
+  Outfile->WriteObject(hTrackResidualsReco, "hTrackResidualsReco");
+  Outfile->WriteObject(hTrackResidualsSim, "hTrackResidualsSim");
+  //Outfile->WriteObject(hdEdxTotAllReco, "hdEdxTotAllReco");
+  //Outfile->WriteObject(hdEdxTotAllSim, "hdEdxTotAllSim");
+*/
+  delete Outfile;
+  delete hQmaxUsedSim;
+  delete hQmaxUsedReco;
+  delete hQUsedSim;
+  delete hQUsedReco;
+  delete hTrackResidualsSim;
+  delete hTrackResidualsReco;
+  delete hdEdxTotAllSim;
+  delete hdEdxTotAllReco;
+  delete hdEdxMaxSim;
+  delete hdEdxMaxReco;
+  delete hdEdxEleTotAllReco;
+  delete hdEdxEleTotAllSim;
+  delete hdEdxEleMaxReco;
+  delete hdEdxEleMaxSim;
+  delete hCRUReco;
+  delete hCRUSim;
+  delete hRowReco;
+  delete hRowSim;
+  delete hPadMeanReco;
+  delete hPadMeanSim;
+  delete hPadSigmaReco;
+  delete hPadSigmaSim;
+  delete hTimeMeanReco;
+  delete hTimeMeanSim;
+  delete hTimeSigmaReco;
+  delete hTimeSigmaSim;
+}
