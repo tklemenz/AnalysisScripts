@@ -385,6 +385,7 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gHitsXY->SetMinimum(-250);
   gHitsXY->SetMaximum(250);
   drawSectorBoundaries();
+  OutFile->WriteObject(cXY, "XY-Plane");
   cXY->Print(Form("%s/xy_plane.png", OutputPath));
 
   TCanvas *cXZ = new TCanvas("cXZ","Hits in X-Z plane");
@@ -395,6 +396,7 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gHitsXZ->GetXaxis()->SetLimits(-250,250);
   gHitsXZ->SetMinimum(-250);
   gHitsXZ->SetMaximum(250);
+  OutFile->WriteObject(cXZ, "XZ-Plane");
   cXZ->Print(Form("%s/xz_plane.png", OutputPath));
 
   TCanvas *cYZ = new TCanvas("cYZ","Hits in Y-Z plane");
@@ -405,6 +407,7 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gHitsYZ->GetXaxis()->SetLimits(-250,250);
   gHitsYZ->SetMinimum(-250);
   gHitsYZ->SetMaximum(250);
+  OutFile->WriteObject(cYZ, "YZ-Plane");
   cYZ->Print(Form("%s/yz_plane.png", OutputPath));
 
   TCanvas *cRowZ = new TCanvas("cRowZ","Z position vs Pad Row");
@@ -412,6 +415,7 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gDigitsRowZ->SetMarkerColor(kRed);
   gHitsRowZ->Draw("ap");
   gDigitsRowZ->Draw("p,same");
+  OutFile->WriteObject(cRowZ, "ZvsRow");
   cRowZ->Print(Form("%s/row_z.png",OutputPath));
 
   TCanvas *cRowTime = new TCanvas("cRowTimeStamp","TimeStamp position vs Pad Row");
@@ -419,5 +423,6 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gDigitsRowTimeStamp->SetMarkerColor(kRed);
   //gHitsRowTimeStamp->Draw("ap");
   gDigitsRowTimeStamp->Draw("ap");
+  OutFile->WriteObject(cRowTime, "TimeVsRow");
   cRowTime->Print(Form("%s/row_timeStamp.png",OutputPath));
 }
