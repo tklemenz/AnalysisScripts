@@ -425,4 +425,6 @@ void studyHitsAndDigits(TString HitFile, TString DigitFile, int sector=0, const 
   gDigitsRowTimeStamp->Draw("ap");
   OutFile->WriteObject(cRowTime, "TimeVsRow");
   cRowTime->Print(Form("%s/row_timeStamp.png",OutputPath));
+
+  OutFile.Close();
 }
