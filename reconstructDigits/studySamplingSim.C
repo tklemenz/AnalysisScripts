@@ -44,6 +44,7 @@ void studySamplingSim(TString FileList, const char* Filename="studySamplingSim.r
   TH2F *hPadOccupancy            = new TH2F("PadOccupancy", ";row;pad;counts", 63,0,63,100,-50,50);
 
   TH1F *hT0FitDist               = new TH1F("hT0FitDist", ";T0fromFit; counts", 10000,0,10000);
+  TH2F *hRawChargeVsTime2D       = new TH2F("RawChargeVsTime2D",";#Deltat_Digit;charge",60,-30,30,1100,0,1100);
 
   std::vector<Digit> *TPCDigits = 0;
 
@@ -221,6 +222,7 @@ void studySamplingSim(TString FileList, const char* Filename="studySamplingSim.r
         const float deltaT = timeStamp - FitT0->Eval(row);
         hChargeVsTime2D->Fill(deltaT,charge);
         hChargeVsTime1D->Fill(deltaT,charge);
+        hRawChargeVsTime2D->Fill(timeStamp,charge);
 
 //        std::cout << "pad: " << padInROC << "\t " << "timeStamp: " << timeStamp << "\t" << "charge: " << charge
 //                  << "      \t"<<std::endl;// << "padCounter: " << padCounter << "\t" << "nPads: " << nPads << "\t" << "timeStamp: "
@@ -231,6 +233,7 @@ void studySamplingSim(TString FileList, const char* Filename="studySamplingSim.r
   }
 
   TFile Outputfile(Form("%s/%s", OutputPath, Filename), "recreate");
+  Outputfile.WriteObject(hRawChargeVsTime2D, "hRawChargeVsTime_2D");
   Outputfile.WriteObject(hChargeVsTime2D, "hChargeVsTime_2D");
   Outputfile.WriteObject(hChargeVsTime1D, "hChargeVsTime_1D");
   Outputfile.WriteObject(hTimeVsRow2DForFit, "hTimeVsRow2DForFit_last_event");
