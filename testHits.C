@@ -12,6 +12,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 #include "TAxis.h"
 #include "TH1F.h"
 #include "TPCSimulation/Point.h"
@@ -67,9 +68,14 @@ void testHits(std::string simFile="o2sim.root")
   grHitsCzr->SetTitle("Hits - Cluster comparison C-Side Event %d;z (cm);r (cm)");
   grHitsCzr->SetMarkerColor(kBlue+2);
 
+  TGraph2D *grHits2D = new TGraph2D();
+  grHits2D->SetTitle("Hits - 3D;x (cm);y (cm);z (cm)");
+  grHits2D->SetMarkerColor(kBlue+2);
 
-  int hitCounterA = 0;
-  int hitCounterC = 0;
+
+  int hitCounterA   = 0;
+  int hitCounterC   = 0;
+  int hitCounter2D  = 0;
 
   for(int event=0; event<hitTree->GetEntriesFast(); ++event) {
   hitTree->GetEntry(event);
@@ -78,6 +84,8 @@ void testHits(std::string simFile="o2sim.root")
       const int MCTrackID = inputgroup.GetTrackID();
       for(size_t hitindex = 0; hitindex < inputgroup.getSize(); ++hitindex){
 	const auto& eh = inputgroup.getHit(hitindex);
+
+	grHits2D->SetPoint(hitCounter2D++, eh.GetX(),eh.GetY(),eh.GetZ());
 
 	// A side
 	if(eh.GetZ() > 0 ) {
@@ -111,6 +119,21 @@ void testHits(std::string simFile="o2sim.root")
   grHitsC->SetMaximum(250);
   drawSectorBoundaries();
   
+  auto CDigitsXZ = new TCanvas("CDigitsXZ", "Compare Digits - Hits on A & C side", 600, 600);
+  grHitsAzr->Draw("ap");
+  grHitsAzr->GetXaxis()->SetLimits(-250, 250);
+  grHitsAzr->SetMinimum(80);
+  grHitsAzr->SetMaximum(250);
+
+  auto CHits2D = new TCanvas("CHits2D", "Hits", 600, 600);
+  grHits2D->Draw();
+  grHits2D->GetXaxis()->SetLimits(-250, 250);
+  grHits2D->GetXaxis()->SetLimits(-250, 250);
+  grHits2D->GetYaxis()->SetLimits(-250, 250);
+  grHits2D->GetYaxis()->SetLimits(-250, 250);
+  grHits2D->SetMinimum(-250);
+  grHits2D->SetMaximum(250);
+
   
   void drawSectorBoundaries()
   {
