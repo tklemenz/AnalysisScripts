@@ -133,7 +133,7 @@ void testHits(std::string simFile="o2sim.root")
   grHits2D->GetYaxis()->SetLimits(-250, 250);
   grHits2D->SetMinimum(-250);
   grHits2D->SetMaximum(250);
-
+}
   
   void drawSectorBoundaries()
   {
